@@ -199,25 +199,28 @@ class _HeaderBackdrop extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
-                    width: 76,
-                    height: 76,
+                    width: 96,
+                    height: 96,
                     decoration: BoxDecoration(
-                      color: Colors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
+                          color: Colors.black.withValues(alpha: 0.25),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.local_florist_rounded,
-                        color: AppColors.rose, size: 40),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/logo/logo.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Gul Do\'koni SMS',
+                    'Roses Kokand Flowers',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,

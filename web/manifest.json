@@ -1,11 +1,11 @@
 {
-    "name": "smstomic",
-    "short_name": "smstomic",
+    "name": "Roses Kokand Flowers - SMS",
+    "short_name": "RK Flowers SMS",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#8E2F55",
+    "theme_color": "#C24875",
+    "description": "Roses Kokand Flowers gul do'koni uchun mijozlar va SMS boshqaruv paneli.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
