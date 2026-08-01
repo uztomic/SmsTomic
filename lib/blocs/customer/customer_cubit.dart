@@ -20,15 +20,22 @@ class CustomerCubit extends Cubit<CustomerState> {
     );
   }
 
+  static const _networkTimeout = Duration(seconds: 12);
+
   Future<bool> addCustomer({
     required String name,
     required String phone,
     required String createdBy,
   }) async {
     try {
-      await _repository.addCustomer(name: name, phone: phone, createdBy: createdBy);
+      await _repository
+          .addCustomer(name: name, phone: phone, createdBy: createdBy)
+          .timeout(_networkTimeout);
       emit(state.copyWith(actionMessage: 'Mijoz qo\'shildi.'));
       return true;
+    } on TimeoutException {
+      emit(state.copyWith(error: 'Internet aloqasi yo\'q yoki juda sekin. Qayta urinib ko\'ring.'));
+      return false;
     } catch (e) {
       emit(state.copyWith(error: 'Mijoz qo\'shishda xatolik: ${e.toString()}'));
       return false;
@@ -37,9 +44,12 @@ class CustomerCubit extends Cubit<CustomerState> {
 
   Future<bool> updateCustomer(Customer customer) async {
     try {
-      await _repository.updateCustomer(customer);
+      await _repository.updateCustomer(customer).timeout(_networkTimeout);
       emit(state.copyWith(actionMessage: 'Mijoz yangilandi.'));
       return true;
+    } on TimeoutException {
+      emit(state.copyWith(error: 'Internet aloqasi yo\'q yoki juda sekin. Qayta urinib ko\'ring.'));
+      return false;
     } catch (e) {
       emit(state.copyWith(error: 'Mijozni yangilashda xatolik: ${e.toString()}'));
       return false;
@@ -48,7 +58,9 @@ class CustomerCubit extends Cubit<CustomerState> {
 
   Future<void> deleteCustomer(String id) async {
     try {
-      await _repository.deleteCustomer(id);
+      await _repository.deleteCustomer(id).timeout(_networkTimeout);
+    } on TimeoutException {
+      emit(state.copyWith(error: 'Internet aloqasi yo\'q yoki juda sekin. Qayta urinib ko\'ring.'));
     } catch (_) {
       emit(state.copyWith(error: 'Mijozni o\'chirishda xatolik yuz berdi.'));
     }
@@ -59,8 +71,12 @@ class CustomerCubit extends Cubit<CustomerState> {
     String createdBy,
   ) async {
     try {
-      final added = await _repository.addCustomersBulk(customers, createdBy);
+      final added = await _repository
+          .addCustomersBulk(customers, createdBy)
+          .timeout(_networkTimeout * 3);
       emit(state.copyWith(actionMessage: '$added ta mijoz import qilindi.'));
+    } on TimeoutException {
+      emit(state.copyWith(error: 'Internet aloqasi yo\'q yoki juda sekin. Qayta urinib ko\'ring.'));
     } catch (_) {
       emit(state.copyWith(error: 'Import qilishda xatolik yuz berdi.'));
     }
