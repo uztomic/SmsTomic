@@ -17,8 +17,15 @@ class Customer extends Equatable {
   });
 
   /// Ism kiritilmagan mijozlarga murojaat qilish uchun ishlatiladi
-  /// (ro'yxatda ko'rsatish va SMS matnida {ism} o'rniga qo'yish).
+  /// (ro'yxatda ko'rsatish uchun).
   String get displayName => name.trim().isEmpty ? 'Hurmatli mijoz' : name.trim();
+
+  /// SMS matnida {ism} o'rniga qo'yiladigan murojaat. "Hurmatli" so'zi
+  /// shu yerning o'zida bir marta qo'shiladi (ismi bo'lsa ham, bo'lmasa
+  /// ham) — shablon matnlarida alohida "hurmatli" so'zi yozilmaydi,
+  /// aks holda takrorlanib qolar edi.
+  String get smsGreeting =>
+      name.trim().isEmpty ? 'Hurmatli mijoz' : 'Hurmatli ${name.trim()}';
 
   Customer copyWith({String? name, String? phone}) {
     return Customer(

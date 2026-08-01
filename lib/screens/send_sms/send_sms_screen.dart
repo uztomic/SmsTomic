@@ -124,7 +124,7 @@ class _SelectionView extends StatelessWidget {
   Widget build(BuildContext context) {
     final bloc = context.read<SendSmsBloc>();
     final previewName =
-        state.customers.isNotEmpty ? state.customers.first.displayName : 'Hurmatli mijoz';
+        state.customers.isNotEmpty ? state.customers.first.smsGreeting : 'Hurmatli mijoz';
     final preview = state.messageTemplate.isEmpty
         ? ''
         : state.messageTemplate.replaceAll('{ism}', previewName);
@@ -159,7 +159,8 @@ class _SelectionView extends StatelessWidget {
                 maxLines: 3,
                 decoration: const InputDecoration(
                   labelText: 'Xabar matni',
-                  helperText: 'Ism uchun {ism} yozing',
+                  helperText:
+                      'Murojaat uchun {ism} yozing — "Hurmatli" so\'zi avtomatik qo\'shiladi',
                 ),
                 onChanged: (v) => bloc.add(CustomMessageChanged(v)),
               ),

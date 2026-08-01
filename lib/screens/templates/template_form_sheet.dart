@@ -96,7 +96,8 @@ class _TemplateFormSheetState extends State<TemplateFormSheet> {
               maxLines: 5,
               decoration: const InputDecoration(
                 labelText: 'Matn',
-                helperText: 'Mijoz ismi uchun {ism} yozing',
+                helperText:
+                    'Murojaat uchun {ism} yozing — "Hurmatli" so\'zi avtomatik qo\'shiladi, alohida yozmang',
               ),
               validator: (v) => (v == null || v.trim().isEmpty) ? 'Matnni kiriting' : null,
             ),

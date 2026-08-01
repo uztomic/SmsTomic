@@ -106,7 +106,7 @@ class SendSmsBloc extends Bloc<SendSmsEvent, SendSmsState> {
 
     final template = state.messageTemplate;
     final jobs = selected
-        .map((c) => MapEntry(c.phone, _renderMessage(template, c.displayName)))
+        .map((c) => MapEntry(c.phone, _renderMessage(template, c.smsGreeting)))
         .toList();
 
     final results = <SmsSendResult>[];

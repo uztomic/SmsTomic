@@ -5,36 +5,61 @@ import '../models/sms_template.dart';
 /// Gul do'koni uchun tayyor shablonlar. Ilova birinchi marta ishga
 /// tushganda, agar Firestore'da hali birorta ham shablon bo'lmasa, shu
 /// ro'yxat avtomatik yuklanadi.
+///
+/// {ism} o'rniga mijozga murojaat avtomatik qo'yiladi va "Hurmatli"
+/// so'zini allaqachon o'z ichiga oladi (masalan "Hurmatli Malika" yoki,
+/// ismi bo'lmasa, "Hurmatli mijoz") — shuning uchun matn ichida
+/// alohida "hurmatli" so'zini yozish shart emas.
 const List<({String title, String body})> defaultFlowerShopTemplates = [
   (
-    title: 'Yangi kolleksiya',
+    title: '🎂 Tug\'ilgan kun tabrigi',
     body:
-        'Assalomu alaykum, hurmatli {ism}! Do\'konimizga yangi gullar kolleksiyasi keldi. Kutib qolamiz!'
+        '{ism}, tug\'ilgan kuningiz muborak bo\'lsin! 🎉 Ushbu maxsus kun sharafiga sizga 15% chegirma taqdim etamiz. Roses Kokand Flowers jamoasidan baxt, sog\'lik va gullardek go\'zallik tilaymiz!'
   ),
   (
-    title: 'Chegirma / aksiya',
+    title: '🎂 Tug\'ilgan kunga maxsus buket',
     body:
-        'Hurmatli {ism}, faqat shu hafta barcha buketlarga 20% gacha chegirma! Shoshiling, aksiya cheklangan.'
+        '{ism}, tug\'ilgan kuningiz bilan chin qalbdan tabriklaymiz! 🌹 Aynan shu ajoyib kun uchun eng nafis buketlarimizni tayyorladik. Kelib, o\'zingiz uchun eng go\'zalini tanlang!'
   ),
   (
-    title: 'Bayram tabrigi',
+    title: '🌷 8-mart bayrami',
     body:
-        'Assalomu alaykum {ism}! Sizni bayram bilan chin qalbdan tabriklaymiz. Baxt-omad hamrohingiz bo\'lsin!'
+        '{ism}, 8-mart Xalqaro xotin-qizlar kuni bilan tabriklaymiz! 🌷 Bahorning eng nafis gullari Roses Kokand Flowers\'da sizni kutmoqda. Bayramingiz baxt va tabassumga to\'la bo\'lsin!'
   ),
   (
-    title: 'Tug\'ilgan kun tabrigi',
+    title: '🌸 Navro\'z bayrami',
     body:
-        'Hurmatli {ism}, tug\'ilgan kuningiz muborak bo\'lsin! Sizga sog\'lik va baxt tilaymiz. Do\'konimizdan maxsus sovg\'a sizni kutmoqda.'
+        '{ism}, Navro\'z bayramingiz muborak bo\'lsin! 🌸 Yangilanish va bahor nafasini uyingizga olib kelish uchun eng yangi gullarimiz tayyor. Sizni kutamiz!'
   ),
   (
-    title: 'Minnatdorchilik',
+    title: '🎄 Yangi yil tabrigi',
     body:
-        'Hurmatli {ism}, bizdan xarid qilganingiz uchun rahmat! Sizni yana ko\'rishdan mamnun bo\'lamiz.'
+        '{ism}, Yangi yilingiz muborak bo\'lsin! 🎄✨ Yaqinlaringizni bayramona buketlar bilan xursand qiling. Roses Kokand Flowers doim sizning yoningizda!'
   ),
   (
-    title: 'Buyurtma tayyor',
+    title: '💐 Yangi, zo\'r buket keldi!',
     body:
-        'Assalomu alaykum {ism}, buyurtmangiz tayyor bo\'ldi. Iltimos, qulay vaqtda do\'konimizdan olib keting.'
+        '{ism}, xushxabar! 💐 Do\'konimizga juda ajoyib, yangi buketlar kelib tushdi. Miqdori cheklangan — birinchilardan bo\'lib kelib, o\'z ko\'zingiz bilan ko\'ring!'
+  ),
+  (
+    title: '🌹 Chegirma / aksiya',
+    body:
+        '{ism}, faqat shu hafta barcha buketlarga 20% gacha chegirma! 🌹 Fursatni boy bermang — Roses Kokand Flowers sizni kutmoqda.'
+  ),
+  (
+    title: '💍 To\'y / nikoh tabrigi',
+    body:
+        '{ism}, turmush qurishingiz muborak bo\'lsin! 💍🌸 Baxtli va totuv oilaviy hayot tilab, eng chiroyli buketlarimizni sizga taqdim etishga tayyormiz.'
+  ),
+  (
+    title: '🙏 Minnatdorchilik',
+    body:
+        '{ism}, bizdan xarid qilganingiz uchun katta rahmat! 🙏 Sizga yana xizmat qilishdan mamnunmiz. Roses Kokand Flowers jamoasi.'
+  ),
+  (
+    title: '✅ Buyurtma tayyor',
+    body:
+        '{ism}, buyurtmangiz tayyor bo\'ldi! 💐 Qulay vaqtda do\'konimizdan olib ketishingiz mumkin. Kutib qolamiz!'
   ),
 ];
 
