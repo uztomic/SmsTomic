@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "551812341031",
+    "project_id": "uztomicsms",
+    "storage_bucket": "uztomicsms.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:551812341031:android:48b4e803b69e9af0cadd02",
+        "android_client_info": {
+          "package_name": "com.example.smstomic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "551812341031-95aion62egek4dei7v4ee90ud12e3e97.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBlawaH_vvwOAfUbYxlJWrmQJ19wehbpF0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "551812341031-95aion62egek4dei7v4ee90ud12e3e97.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

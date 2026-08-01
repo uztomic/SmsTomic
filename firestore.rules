@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function myUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function hasAccount() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return hasAccount() && myUserDoc().data.role == 'admin';
+    }
+
+    function hasPermission(perm) {
+      return isAdmin() || (hasAccount() && perm in myUserDoc().data.permissions);
+    }
+
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      // Foydalanuvchilarni boshqarish (yaratish/o'chirish) faqat adminga
+      // tegishli — birinchi admin hisobi Firebase Admin SDK orqali
+      // (qoidalarni chetlab o'tib) yaratiladi.
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /customers/{id} {
+      allow read: if hasAccount();
+      allow write: if hasPermission('manageCustomers');
+    }
+
+    match /templates/{id} {
+      allow read: if hasAccount();
+      allow write: if hasPermission('manageTemplates');
+    }
+
+    match /sms_logs/{id} {
+      allow read: if hasPermission('viewHistory');
+      allow create: if hasPermission('sendSms');
+      allow update, delete: if false;
+    }
+  }
+}
