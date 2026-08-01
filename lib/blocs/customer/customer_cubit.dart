@@ -20,23 +20,29 @@ class CustomerCubit extends Cubit<CustomerState> {
     );
   }
 
-  Future<void> addCustomer({
+  Future<bool> addCustomer({
     required String name,
     required String phone,
     required String createdBy,
   }) async {
     try {
       await _repository.addCustomer(name: name, phone: phone, createdBy: createdBy);
-    } catch (_) {
-      emit(state.copyWith(error: 'Mijoz qo\'shishda xatolik yuz berdi.'));
+      emit(state.copyWith(actionMessage: 'Mijoz qo\'shildi.'));
+      return true;
+    } catch (e) {
+      emit(state.copyWith(error: 'Mijoz qo\'shishda xatolik: ${e.toString()}'));
+      return false;
     }
   }
 
-  Future<void> updateCustomer(Customer customer) async {
+  Future<bool> updateCustomer(Customer customer) async {
     try {
       await _repository.updateCustomer(customer);
-    } catch (_) {
-      emit(state.copyWith(error: 'Mijozni yangilashda xatolik yuz berdi.'));
+      emit(state.copyWith(actionMessage: 'Mijoz yangilandi.'));
+      return true;
+    } catch (e) {
+      emit(state.copyWith(error: 'Mijozni yangilashda xatolik: ${e.toString()}'));
+      return false;
     }
   }
 

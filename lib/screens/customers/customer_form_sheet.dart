@@ -26,6 +26,8 @@ class _CustomerFormSheetState extends State<CustomerFormSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
+  bool _saving = false;
+  String? _errorText;
 
   @override
   void initState() {
@@ -41,24 +43,39 @@ class _CustomerFormSheetState extends State<CustomerFormSheet> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final cubit = context.read<CustomerCubit>();
+    setState(() {
+      _saving = true;
+      _errorText = null;
+    });
+
+    bool success;
     if (widget.customer == null) {
       final authState = context.read<AuthBloc>().state;
       final createdBy = authState is AuthAuthenticated ? authState.user.email : '';
-      cubit.addCustomer(
+      success = await cubit.addCustomer(
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
         createdBy: createdBy,
       );
     } else {
-      cubit.updateCustomer(widget.customer!.copyWith(
+      success = await cubit.updateCustomer(widget.customer!.copyWith(
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
       ));
     }
-    Navigator.of(context).pop();
+
+    if (!mounted) return;
+    if (success) {
+      Navigator.of(context).pop();
+    } else {
+      setState(() {
+        _saving = false;
+        _errorText = 'Saqlashda xatolik yuz berdi. Internetni tekshirib, qayta urinib ko\'ring.';
+      });
+    }
   }
 
   @override
@@ -112,10 +129,20 @@ class _CustomerFormSheetState extends State<CustomerFormSheet> {
               validator: (v) =>
                   (v == null || v.trim().length < 9) ? 'To\'g\'ri raqam kiriting' : null,
             ),
+            if (_errorText != null) ...[
+              const SizedBox(height: 12),
+              Text(_errorText!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ],
             const SizedBox(height: 24),
             FilledButton(
-              onPressed: _submit,
-              child: Text(widget.customer == null ? 'Qo\'shish' : 'Saqlash'),
+              onPressed: _saving ? null : _submit,
+              child: _saving
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(widget.customer == null ? 'Qo\'shish' : 'Saqlash'),
             ),
           ],
         ),
