@@ -54,7 +54,7 @@ class _SendSmsScreenState extends State<SendSmsScreen> {
         }
       },
       builder: (context, state) {
-        if (state.phase == SendPhase.sending) {
+        if (state.phase == SendPhase.sending || state.phase == SendPhase.paused) {
           return Scaffold(body: _SendingView(state: state));
         }
         return Scaffold(
@@ -80,6 +80,9 @@ class _SendingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = state.totalToSend == 0 ? 0.0 : state.sentCount / state.totalToSend;
+    final isPaused = state.phase == SendPhase.paused;
+    final bloc = context.read<SendSmsBloc>();
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -95,10 +98,14 @@ class _SendingView extends StatelessWidget {
                   CircularProgressIndicator(
                     value: progress,
                     strokeWidth: 6,
-                    color: AppColors.rose,
+                    color: isPaused ? Colors.grey : AppColors.rose,
                     backgroundColor: AppColors.roseLight,
                   ),
-                  const Icon(Icons.sms_rounded, color: AppColors.rose, size: 28),
+                  Icon(
+                    isPaused ? Icons.pause_rounded : Icons.sms_rounded,
+                    color: isPaused ? Colors.grey.shade600 : AppColors.rose,
+                    size: 28,
+                  ),
                 ],
               ),
             ),
@@ -109,14 +116,59 @@ class _SendingView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Iltimos kuting, SMS ketma-ket yuborilmoqda...',
+              isPaused
+                  ? 'To\'xtatib turildi. Davom ettirish uchun tugmani bosing.'
+                  : 'Iltimos kuting, SMS ketma-ket yuborilmoqda...',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => bloc.add(
+                    isPaused ? const ResumeSendRequested() : const PauseSendRequested(),
+                  ),
+                  icon: Icon(isPaused ? Icons.play_arrow_rounded : Icons.pause_rounded),
+                  label: Text(isPaused ? 'Davom ettirish' : 'To\'xtatib turish'),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _confirmStop(context, bloc),
+                  style: OutlinedButton.styleFrom(foregroundColor: Colors.red.shade700),
+                  icon: const Icon(Icons.stop_rounded),
+                  label: const Text('To\'xtatish'),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _confirmStop(BuildContext context, SendSmsBloc bloc) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Yuborishni to\'xtatish'),
+        content: const Text(
+          'Qolgan mijozlarga SMS yuborilmaydi. Hozirgacha yuborilganlar tarixda saqlanadi. Davom etilsinmi?',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Bekor qilish')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('To\'xtatish'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      bloc.add(const StopSendRequested());
+    }
   }
 }
 

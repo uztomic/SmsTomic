@@ -8,6 +8,7 @@ import android.net.Uri
 import android.telephony.SmsManager
 import android.telephony.SubscriptionManager
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -49,6 +50,23 @@ class MainActivity : FlutterActivity() {
                         } catch (e: Exception) {
                             result.error("SIM_LIST_FAILED", e.message, null)
                         }
+                    }
+                    "startSendProgress" -> {
+                        val total = call.argument<Int>("total") ?: 0
+                        sendProgressToService(sent = 0, total = total, done = false)
+                        result.success(true)
+                    }
+                    "updateSendProgress" -> {
+                        val sent = call.argument<Int>("sent") ?: 0
+                        val total = call.argument<Int>("total") ?: 0
+                        sendProgressToService(sent = sent, total = total, done = false)
+                        result.success(true)
+                    }
+                    "completeSendProgress" -> {
+                        val sent = call.argument<Int>("sent") ?: 0
+                        val total = call.argument<Int>("total") ?: 0
+                        sendProgressToService(sent = sent, total = total, done = true)
+                        result.success(true)
                     }
                     else -> result.notImplemented()
                 }
@@ -166,6 +184,17 @@ class MainActivity : FlutterActivity() {
             )
         }
         return list
+    }
+
+    /// SmsSendingService'ga joriy progressni yuboradi — servis shu
+    /// ma'lumot bilan doimiy bildirishnomani yangilaydi.
+    private fun sendProgressToService(sent: Int, total: Int, done: Boolean) {
+        val intent = Intent(this, SmsSendingService::class.java).apply {
+            putExtra(SmsSendingService.EXTRA_SENT, sent)
+            putExtra(SmsSendingService.EXTRA_TOTAL, total)
+            putExtra(SmsSendingService.EXTRA_DONE, done)
+        }
+        ContextCompat.startForegroundService(this, intent)
     }
 
     private fun sendSms(phone: String, message: String, subscriptionId: Int?) {

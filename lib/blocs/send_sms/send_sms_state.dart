@@ -1,6 +1,6 @@
 part of 'send_sms_bloc.dart';
 
-enum SendPhase { idle, sending, done }
+enum SendPhase { idle, sending, paused, done }
 
 class SendSmsState extends Equatable {
   final List<Customer> customers;

@@ -94,3 +94,15 @@ class SendRequested extends SendSmsEvent {
 class SendResetRequested extends SendSmsEvent {
   const SendResetRequested();
 }
+
+class PauseSendRequested extends SendSmsEvent {
+  const PauseSendRequested();
+}
+
+class ResumeSendRequested extends SendSmsEvent {
+  const ResumeSendRequested();
+}
+
+class StopSendRequested extends SendSmsEvent {
+  const StopSendRequested();
+}

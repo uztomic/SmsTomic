@@ -22,6 +22,8 @@ class SendSmsBloc extends Bloc<SendSmsEvent, SendSmsState> {
 
   StreamSubscription<List<Customer>>? _customersSub;
   StreamSubscription<List<SmsTemplate>>? _templatesSub;
+  StreamSubscription<SmsSendResult>? _sendSubscription;
+  Completer<void>? _sendCompleter;
 
   SendSmsBloc({
     required CustomerRepository customerRepository,
@@ -45,6 +47,9 @@ class SendSmsBloc extends Bloc<SendSmsEvent, SendSmsState> {
     on<CustomMessageChanged>(_onCustomMessageChanged);
     on<SendRequested>(_onSendRequested);
     on<SendResetRequested>(_onSendReset);
+    on<PauseSendRequested>(_onPauseSend);
+    on<ResumeSendRequested>(_onResumeSend);
+    on<StopSendRequested>(_onStopSend);
   }
 
   void _onStarted(SendSmsStarted event, Emitter<SendSmsState> emit) {
@@ -114,6 +119,8 @@ class SendSmsBloc extends Bloc<SendSmsEvent, SendSmsState> {
       error: null,
     ));
 
+    await _smsService.startSendProgress(selected.length);
+
     final template = state.messageTemplate;
     final jobs = selected
         .map((c) => MapEntry(c.phone, _renderMessage(template, c.smsGreeting)))
@@ -121,26 +128,69 @@ class SendSmsBloc extends Bloc<SendSmsEvent, SendSmsState> {
 
     final results = <SmsSendResult>[];
     var i = 0;
-    await for (final result in _smsService.sendBulk(
-      phoneAndMessage: jobs,
-      subscriptionId: state.selectedSubscriptionId,
-    )) {
-      final customer = selected[i];
-      results.add(result);
-      await _logRepository.addLog(SmsLog(
-        id: '',
-        customerName: customer.displayName,
-        phone: customer.phone,
-        message: jobs[i].value,
-        sentByEmail: event.senderEmail,
-        success: result.success,
-        error: result.error,
-      ));
-      i++;
-      emit(state.copyWith(sentCount: i, results: List.of(results)));
-    }
+    final completer = Completer<void>();
+    _sendCompleter = completer;
 
+    _sendSubscription = _smsService
+        .sendBulk(
+          phoneAndMessage: jobs,
+          subscriptionId: state.selectedSubscriptionId,
+        )
+        .listen(
+      (result) {
+        final customer = selected[i];
+        results.add(result);
+        unawaited(_logRepository.addLog(SmsLog(
+          id: '',
+          customerName: customer.displayName,
+          phone: customer.phone,
+          message: jobs[i].value,
+          sentByEmail: event.senderEmail,
+          success: result.success,
+          error: result.error,
+        )));
+        i++;
+        emit(state.copyWith(sentCount: i, results: List.of(results)));
+        unawaited(_smsService.updateSendProgress(i, selected.length));
+      },
+      onDone: () {
+        unawaited(_smsService.completeSendProgress(i, selected.length));
+        emit(state.copyWith(phase: SendPhase.done));
+        if (!completer.isCompleted) completer.complete();
+      },
+      onError: (_) {
+        if (!completer.isCompleted) completer.complete();
+      },
+      cancelOnError: false,
+    );
+
+    await completer.future;
+    _sendSubscription = null;
+    _sendCompleter = null;
+  }
+
+  void _onPauseSend(PauseSendRequested event, Emitter<SendSmsState> emit) {
+    if (state.phase != SendPhase.sending) return;
+    _sendSubscription?.pause();
+    emit(state.copyWith(phase: SendPhase.paused));
+  }
+
+  void _onResumeSend(ResumeSendRequested event, Emitter<SendSmsState> emit) {
+    if (state.phase != SendPhase.paused) return;
+    _sendSubscription?.resume();
+    emit(state.copyWith(phase: SendPhase.sending));
+  }
+
+  Future<void> _onStopSend(StopSendRequested event, Emitter<SendSmsState> emit) async {
+    await _sendSubscription?.cancel();
+    _sendSubscription = null;
+    await _smsService.completeSendProgress(state.sentCount, state.totalToSend);
     emit(state.copyWith(phase: SendPhase.done));
+    final completer = _sendCompleter;
+    if (completer != null && !completer.isCompleted) {
+      completer.complete();
+    }
+    _sendCompleter = null;
   }
 
   String _renderMessage(String template, String customerName) {
@@ -162,6 +212,7 @@ class SendSmsBloc extends Bloc<SendSmsEvent, SendSmsState> {
   Future<void> close() {
     _customersSub?.cancel();
     _templatesSub?.cancel();
+    _sendSubscription?.cancel();
     return super.close();
   }
 }

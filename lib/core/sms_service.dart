@@ -95,10 +95,13 @@ class SmsService {
   /// qisqa kutish qo'yiladi — Android tizimi ko'p sonli SMS'ni bir vaqtda
   /// yuborishni "shubhali faoliyat" deb hisoblab, ogohlantirish oynasini
   /// chiqarishi mumkin, shu sababli oraliqdagi kutish shu xavfni kamaytiradi.
+  /// Bu Stream'ning tinglovchisi pause()/resume()/cancel() qila oladi —
+  /// shu orqali yuborishni to'xtatib turish, davom ettirish yoki butunlay
+  /// bekor qilish mumkin.
   Stream<SmsSendResult> sendBulk({
     required List<MapEntry<String, String>> phoneAndMessage,
     int? subscriptionId,
-    Duration delayBetween = const Duration(milliseconds: 1200),
+    Duration delayBetween = const Duration(milliseconds: 500),
   }) async* {
     for (var i = 0; i < phoneAndMessage.length; i++) {
       final entry = phoneAndMessage[i];
@@ -112,5 +115,31 @@ class SmsService {
         await Future.delayed(delayBetween);
       }
     }
+  }
+
+  /// POST_NOTIFICATIONS ruxsatini so'raydi (Android 13+ da doimiy
+  /// bildirishnomani ko'rsatish uchun kerak).
+  Future<void> ensureNotificationPermission() async {
+    final status = await Permission.notification.status;
+    if (!status.isGranted) {
+      await Permission.notification.request();
+    }
+  }
+
+  /// Ilova fonga o'tsa ham (RAM'dan tozalanmagunicha) SMS yuborish davom
+  /// etishi va foydalanuvchi progressni bildirishnomalar panelidan kuzata
+  /// olishi uchun doimiy bildirishnoma bilan foreground service ishga
+  /// tushiriladi.
+  Future<void> startSendProgress(int total) async {
+    await ensureNotificationPermission();
+    await _channel.invokeMethod('startSendProgress', {'total': total});
+  }
+
+  Future<void> updateSendProgress(int sent, int total) async {
+    await _channel.invokeMethod('updateSendProgress', {'sent': sent, 'total': total});
+  }
+
+  Future<void> completeSendProgress(int sent, int total) async {
+    await _channel.invokeMethod('completeSendProgress', {'sent': sent, 'total': total});
   }
 }
