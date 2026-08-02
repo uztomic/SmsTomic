@@ -13,8 +13,10 @@ class MainActivity : FlutterActivity() {
     private val smsChannelName = "com.tomicsms/sms"
     private val fileChannelName = "com.tomicsms/files"
     private val pickCsvRequestCode = 4201
+    private val saveCsvRequestCode = 4202
 
     private var pendingFileResult: MethodChannel.Result? = null
+    private var pendingSaveBytes: ByteArray? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -45,7 +47,7 @@ class MainActivity : FlutterActivity() {
                 when (call.method) {
                     "pickCsv" -> {
                         if (pendingFileResult != null) {
-                            result.error("BUSY", "Fayl tanlash allaqachon davom etmoqda", null)
+                            result.error("BUSY", "Fayl bilan ish allaqachon davom etmoqda", null)
                             return@setMethodCallHandler
                         }
                         pendingFileResult = result
@@ -55,6 +57,26 @@ class MainActivity : FlutterActivity() {
                         }
                         startActivityForResult(intent, pickCsvRequestCode)
                     }
+                    "saveCsv" -> {
+                        if (pendingFileResult != null) {
+                            result.error("BUSY", "Fayl bilan ish allaqachon davom etmoqda", null)
+                            return@setMethodCallHandler
+                        }
+                        val filename = call.argument<String>("filename") ?: "export.csv"
+                        val bytes = call.argument<ByteArray>("bytes")
+                        if (bytes == null) {
+                            result.error("INVALID_ARGS", "bytes bo'sh", null)
+                            return@setMethodCallHandler
+                        }
+                        pendingFileResult = result
+                        pendingSaveBytes = bytes
+                        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = "text/csv"
+                            putExtra(Intent.EXTRA_TITLE, filename)
+                        }
+                        startActivityForResult(intent, saveCsvRequestCode)
+                    }
                     else -> result.notImplemented()
                 }
             }
@@ -62,8 +84,13 @@ class MainActivity : FlutterActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode != pickCsvRequestCode) return
+        when (requestCode) {
+            pickCsvRequestCode -> handlePickResult(resultCode, data)
+            saveCsvRequestCode -> handleSaveResult(resultCode, data)
+        }
+    }
 
+    private fun handlePickResult(resultCode: Int, data: Intent?) {
         val result = pendingFileResult
         pendingFileResult = null
 
@@ -82,6 +109,25 @@ class MainActivity : FlutterActivity() {
             result?.success(bytes)
         } catch (e: Exception) {
             result?.error("READ_FAILED", e.message, null)
+        }
+    }
+
+    private fun handleSaveResult(resultCode: Int, data: Intent?) {
+        val result = pendingFileResult
+        pendingFileResult = null
+        val bytes = pendingSaveBytes
+        pendingSaveBytes = null
+
+        if (resultCode != Activity.RESULT_OK || data?.data == null || bytes == null) {
+            result?.success(false)
+            return
+        }
+
+        try {
+            contentResolver.openOutputStream(data.data!!)?.use { it.write(bytes) }
+            result?.success(true)
+        } catch (e: Exception) {
+            result?.error("WRITE_FAILED", e.message, null)
         }
     }
 

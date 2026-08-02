@@ -5,10 +5,17 @@ import '../../blocs/template/template_cubit.dart';
 import '../../models/sms_template.dart';
 
 Future<void> showTemplateFormSheet(BuildContext context, {SmsTemplate? template}) {
+  // showModalBottomSheet ochgan yangi qatlam sahifadagi TemplateCubit'ni
+  // avtomatik ko'rmaydi, shuning uchun uni shu yerda ushlab, yangi
+  // qatlamga qayta uzatamiz.
+  final templateCubit = context.read<TemplateCubit>();
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    builder: (_) => TemplateFormSheet(template: template),
+    builder: (_) => BlocProvider.value(
+      value: templateCubit,
+      child: TemplateFormSheet(template: template),
+    ),
   );
 }
 

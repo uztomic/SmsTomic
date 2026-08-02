@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../models/customer.dart';
 import 'csv_import.dart';
 import 'customer_form_sheet.dart';
+import 'customers_export.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
@@ -86,10 +87,15 @@ class _CustomersScreenState extends State<CustomersScreen> {
                           ?.copyWith(color: Colors.grey.shade600),
                     ),
                     const Spacer(),
-                    TextButton.icon(
+                    IconButton(
                       onPressed: () => pickAndImportCustomersCsv(context),
-                      icon: const Icon(Icons.upload_file_rounded, size: 18),
-                      label: const Text('CSV import'),
+                      icon: const Icon(Icons.upload_file_rounded),
+                      tooltip: 'Excel/CSV import',
+                    ),
+                    IconButton(
+                      onPressed: () => exportCustomersToExcel(context, state.customers),
+                      icon: const Icon(Icons.download_rounded),
+                      tooltip: 'Excel/CSV eksport',
                     ),
                   ],
                 ),

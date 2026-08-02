@@ -6,10 +6,17 @@ import '../../blocs/customer/customer_cubit.dart';
 import '../../models/customer.dart';
 
 Future<void> showCustomerFormSheet(BuildContext context, {Customer? customer}) {
+  // showModalBottomSheet ochgan yangi qatlam sahifadagi CustomerCubit'ni
+  // avtomatik ko'rmaydi (u alohida Overlay yozuvida joylashadi), shuning
+  // uchun cubit'ni shu yerda ushlab, yangi qatlamga qayta uzatamiz.
+  final customerCubit = context.read<CustomerCubit>();
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    builder: (_) => CustomerFormSheet(customer: customer),
+    builder: (_) => BlocProvider.value(
+      value: customerCubit,
+      child: CustomerFormSheet(customer: customer),
+    ),
   );
 }
 
