@@ -1,0 +1,33 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.5"
+          channel: stable
+
+      - run: flutter pub get
+
+      - run: flutter build apk --release
+
+      - name: Publish latest APK as a GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest-apk
+          name: "So'nggi Android APK"
+          body: "Bu havola har safar kodga o'zgartirish kiritilganda avtomatik yangilanadi. Telefoningizga o'rnatish uchun quyidagi app-release.apk faylini yuklab oling (\"Noma'lum manbalardan o'rnatish\"ga ruxsat berish kerak bo'lishi mumkin)."
+          files: build/app/outputs/flutter-apk/app-release.apk
+          make_latest: true
