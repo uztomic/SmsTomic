@@ -5,6 +5,8 @@ enum SendPhase { idle, sending, done }
 class SendSmsState extends Equatable {
   final List<Customer> customers;
   final List<SmsTemplate> templates;
+  final List<SimInfo> availableSims;
+  final int? selectedSubscriptionId;
   final Set<String> selectedIds;
   final String? selectedTemplateId;
   final String customMessage;
@@ -17,6 +19,8 @@ class SendSmsState extends Equatable {
   const SendSmsState({
     this.customers = const [],
     this.templates = const [],
+    this.availableSims = const [],
+    this.selectedSubscriptionId,
     this.selectedIds = const {},
     this.selectedTemplateId,
     this.customMessage = '',
@@ -39,6 +43,8 @@ class SendSmsState extends Equatable {
   SendSmsState copyWith({
     List<Customer>? customers,
     List<SmsTemplate>? templates,
+    List<SimInfo>? availableSims,
+    int? selectedSubscriptionId,
     Set<String>? selectedIds,
     String? selectedTemplateId,
     bool clearSelectedTemplateId = false,
@@ -52,6 +58,8 @@ class SendSmsState extends Equatable {
     return SendSmsState(
       customers: customers ?? this.customers,
       templates: templates ?? this.templates,
+      availableSims: availableSims ?? this.availableSims,
+      selectedSubscriptionId: selectedSubscriptionId ?? this.selectedSubscriptionId,
       selectedIds: selectedIds ?? this.selectedIds,
       selectedTemplateId: clearSelectedTemplateId
           ? null
@@ -69,6 +77,8 @@ class SendSmsState extends Equatable {
   List<Object?> get props => [
         customers,
         templates,
+        availableSims,
+        selectedSubscriptionId,
         selectedIds,
         selectedTemplateId,
         customMessage,

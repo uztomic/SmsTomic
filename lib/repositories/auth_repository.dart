@@ -67,6 +67,21 @@ class AuthRepository {
     }
   }
 
+  /// Mavjud xodimning ismi va ruxsatlarini yangilaydi. Email/parolni
+  /// o'zgartirish uchun Firebase Admin SDK kerak bo'ladi (mijoz SDK
+  /// boshqa foydalanuvchining login ma'lumotlarini o'zgartira olmaydi),
+  /// shuning uchun bu yerda faqat ism va ruxsatlar tahrirlanadi.
+  Future<void> updateWorker({
+    required String uid,
+    required String name,
+    required Set<Permission> permissions,
+  }) {
+    return _usersRef.doc(uid).update({
+      'name': name,
+      'permissions': permissions.map((p) => p.name).toList(),
+    });
+  }
+
   Stream<List<AppUser>> watchUsers() {
     return _usersRef.orderBy('createdAt', descending: true).snapshots().map(
           (snap) => snap.docs

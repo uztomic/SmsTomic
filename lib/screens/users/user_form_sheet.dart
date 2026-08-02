@@ -16,8 +16,21 @@ Future<void> showCreateWorkerSheet(BuildContext context) {
   );
 }
 
+Future<void> showEditWorkerSheet(BuildContext context, AppUser worker) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (ctx) => BlocProvider.value(
+      value: context.read<UserCubit>(),
+      child: _UserFormSheet(worker: worker),
+    ),
+  );
+}
+
 class _UserFormSheet extends StatefulWidget {
-  const _UserFormSheet();
+  final AppUser? worker;
+
+  const _UserFormSheet({this.worker});
 
   @override
   State<_UserFormSheet> createState() => _UserFormSheetState();
@@ -25,10 +38,21 @@ class _UserFormSheet extends StatefulWidget {
 
 class _UserFormSheetState extends State<_UserFormSheet> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final Set<Permission> _selectedPermissions = {Permission.manageCustomers};
+  late final TextEditingController _nameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _passwordController;
+  late final Set<Permission> _selectedPermissions;
+
+  bool get _isEditing => widget.worker != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.worker?.name ?? '');
+    _emailController = TextEditingController(text: widget.worker?.email ?? '');
+    _passwordController = TextEditingController();
+    _selectedPermissions = {...(widget.worker?.permissions ?? {Permission.manageCustomers})};
+  }
 
   @override
   void dispose() {
@@ -40,12 +64,21 @@ class _UserFormSheetState extends State<_UserFormSheet> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    context.read<UserCubit>().createWorker(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          name: _nameController.text.trim(),
-          permissions: _selectedPermissions,
-        );
+    final cubit = context.read<UserCubit>();
+    if (_isEditing) {
+      cubit.updateWorker(
+        uid: widget.worker!.uid,
+        name: _nameController.text.trim(),
+        permissions: _selectedPermissions,
+      );
+    } else {
+      cubit.createWorker(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        name: _nameController.text.trim(),
+        permissions: _selectedPermissions,
+      );
+    }
   }
 
   @override
@@ -79,7 +112,10 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
-              Text('Yangi xodim hisobi', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                _isEditing ? 'Xodimni tahrirlash' : 'Yangi xodim hisobi',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _nameController,
@@ -89,17 +125,23 @@ class _UserFormSheetState extends State<_UserFormSheet> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _emailController,
+                enabled: !_isEditing,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Email'),
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  helperText: _isEditing ? 'Email o\'zgartirib bo\'lmaydi' : null,
+                ),
                 validator: (v) => (v == null || !v.contains('@')) ? 'Email kiriting' : null,
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Vaqtinchalik parol'),
-                validator: (v) => (v == null || v.length < 6) ? 'Kamida 6 belgi' : null,
-              ),
+              if (!_isEditing) ...[
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Vaqtinchalik parol'),
+                  validator: (v) => (v == null || v.length < 6) ? 'Kamida 6 belgi' : null,
+                ),
+              ],
               const SizedBox(height: 20),
               Text(
                 'Ruxsatlar',
@@ -138,7 +180,7 @@ class _UserFormSheetState extends State<_UserFormSheet> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                           )
-                        : const Text('Hisob yaratish'),
+                        : Text(_isEditing ? 'Saqlash' : 'Hisob yaratish'),
                   );
                 },
               ),

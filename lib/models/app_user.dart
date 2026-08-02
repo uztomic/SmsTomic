@@ -18,7 +18,8 @@ enum Permission {
   manageCustomers,
   manageTemplates,
   sendSms,
-  viewHistory;
+  viewHistory,
+  exportCustomers;
 
   String get label {
     switch (this) {
@@ -30,6 +31,8 @@ enum Permission {
         return 'SMS yuborish';
       case Permission.viewHistory:
         return 'Tarixni ko\'rish';
+      case Permission.exportCustomers:
+        return 'Mijozlarni Excel\'ga eksport qilish';
     }
   }
 }

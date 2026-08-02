@@ -40,6 +40,30 @@ class UserCubit extends Cubit<UserState> {
     }
   }
 
+  Future<bool> updateWorker({
+    required String uid,
+    required String name,
+    required Set<Permission> permissions,
+  }) async {
+    emit(state.copyWith(creating: true, error: null));
+    try {
+      await _repository
+          .updateWorker(uid: uid, name: name, permissions: permissions)
+          .timeout(const Duration(seconds: 12));
+      emit(state.copyWith(creating: false, actionMessage: 'Xodim ma\'lumotlari yangilandi.'));
+      return true;
+    } on TimeoutException {
+      emit(state.copyWith(
+        creating: false,
+        error: 'Internet aloqasi yo\'q yoki juda sekin. Qayta urinib ko\'ring.',
+      ));
+      return false;
+    } catch (e) {
+      emit(state.copyWith(creating: false, error: 'Yangilashda xatolik: ${e.toString()}'));
+      return false;
+    }
+  }
+
   Future<void> revokeUser(String uid) async {
     try {
       await _repository.revokeUser(uid);

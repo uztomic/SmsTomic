@@ -14,10 +14,13 @@ class SendSmsScreen extends StatefulWidget {
 
 class _SendSmsScreenState extends State<SendSmsScreen> {
   final _customMessageController = TextEditingController();
+  final _searchController = TextEditingController();
+  String _query = '';
 
   @override
   void dispose() {
     _customMessageController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -58,6 +61,9 @@ class _SendSmsScreenState extends State<SendSmsScreen> {
           body: _SelectionView(
             state: state,
             customMessageController: _customMessageController,
+            searchController: _searchController,
+            query: _query,
+            onQueryChanged: (v) => setState(() => _query = v),
           ),
           bottomNavigationBar: const _SendSmsBottomBar(),
         );
@@ -117,12 +123,28 @@ class _SendingView extends StatelessWidget {
 class _SelectionView extends StatelessWidget {
   final SendSmsState state;
   final TextEditingController customMessageController;
+  final TextEditingController searchController;
+  final String query;
+  final ValueChanged<String> onQueryChanged;
 
-  const _SelectionView({required this.state, required this.customMessageController});
+  const _SelectionView({
+    required this.state,
+    required this.customMessageController,
+    required this.searchController,
+    required this.query,
+    required this.onQueryChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     final bloc = context.read<SendSmsBloc>();
+    final filteredCustomers = query.isEmpty
+        ? state.customers
+        : state.customers
+            .where((c) =>
+                c.displayName.toLowerCase().contains(query.toLowerCase()) ||
+                c.phone.contains(query))
+            .toList();
     final previewName =
         state.customers.isNotEmpty ? state.customers.first.smsGreeting : 'Hurmatli mijoz';
     final preview = state.messageTemplate.isEmpty
@@ -150,6 +172,45 @@ class _SelectionView extends StatelessWidget {
             ),
           ),
         ),
+        if (state.availableSims.length > 1)
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            sliver: SliverToBoxAdapter(
+              child: Row(
+                children: [
+                  Icon(Icons.sim_card_rounded, size: 18, color: Colors.grey.shade600),
+                  const SizedBox(width: 8),
+                  Text(
+                    'SIM karta:',
+                    style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Wrap(
+                      spacing: 8,
+                      children: [
+                        for (final sim in state.availableSims)
+                          ChoiceChip(
+                            label: Text(sim.label),
+                            selected: state.selectedSubscriptionId == sim.subscriptionId,
+                            onSelected: (_) => bloc.add(SimSelected(sim.subscriptionId)),
+                            selectedColor: AppColors.roseLight,
+                            labelStyle: TextStyle(
+                              color: state.selectedSubscriptionId == sim.subscriptionId
+                                  ? AppColors.roseDark
+                                  : null,
+                              fontWeight: state.selectedSubscriptionId == sim.subscriptionId
+                                  ? FontWeight.w600
+                                  : null,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         if (state.selectedTemplateId == null)
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
@@ -199,6 +260,28 @@ class _SelectionView extends StatelessWidget {
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
           sliver: SliverToBoxAdapter(
+            child: TextField(
+              controller: searchController,
+              onChanged: onQueryChanged,
+              decoration: InputDecoration(
+                hintText: 'Ism yoki telefon bo\'yicha qidirish',
+                prefixIcon: const Icon(Icons.search_rounded),
+                suffixIcon: query.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear_rounded),
+                        onPressed: () {
+                          searchController.clear();
+                          onQueryChanged('');
+                        },
+                      ),
+              ),
+            ),
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          sliver: SliverToBoxAdapter(
             child: Row(
               children: [
                 Checkbox(
@@ -228,20 +311,23 @@ class _SelectionView extends StatelessWidget {
             ),
           ),
         ),
-        if (state.customers.isEmpty)
+        if (filteredCustomers.isEmpty)
           SliverFillRemaining(
             hasScrollBody: false,
             child: Center(
-              child: Text('Mijozlar ro\'yxati bo\'sh', style: TextStyle(color: Colors.grey.shade500)),
+              child: Text(
+                state.customers.isEmpty ? 'Mijozlar ro\'yxati bo\'sh' : 'Mijoz topilmadi',
+                style: TextStyle(color: Colors.grey.shade500),
+              ),
             ),
           )
         else
           SliverPadding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 110),
             sliver: SliverList.builder(
-              itemCount: state.customers.length,
+              itemCount: filteredCustomers.length,
               itemBuilder: (context, i) {
-                final c = state.customers[i];
+                final c = filteredCustomers[i];
                 final selected = state.selectedIds.contains(c.id);
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 8),

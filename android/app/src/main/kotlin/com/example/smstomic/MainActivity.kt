@@ -1,9 +1,13 @@
 package com.example.smstomic
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.telephony.SmsManager
+import android.telephony.SubscriptionManager
+import androidx.core.app.ActivityCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -27,15 +31,23 @@ class MainActivity : FlutterActivity() {
                     "sendSms" -> {
                         val phone = call.argument<String>("phone")
                         val message = call.argument<String>("message")
+                        val subscriptionId = call.argument<Int>("subscriptionId")
                         if (phone.isNullOrBlank() || message.isNullOrBlank()) {
                             result.error("INVALID_ARGS", "phone yoki message bo'sh", null)
                             return@setMethodCallHandler
                         }
                         try {
-                            sendSms(phone, message)
+                            sendSms(phone, message, subscriptionId)
                             result.success(true)
                         } catch (e: Exception) {
                             result.error("SEND_FAILED", e.message, null)
+                        }
+                    }
+                    "getSimList" -> {
+                        try {
+                            result.success(getSimSubscriptions())
+                        } catch (e: Exception) {
+                            result.error("SIM_LIST_FAILED", e.message, null)
                         }
                     }
                     else -> result.notImplemented()
@@ -131,8 +143,38 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun sendSms(phone: String, message: String) {
-        val smsManager: SmsManager = SmsManager.getDefault()
+    /// Qurilmadagi faol SIM kartalar ro'yxatini qaytaradi. READ_PHONE_STATE
+    /// ruxsati berilmagan bo'lsa, bo'sh ro'yxat qaytadi (Dart tomon
+    /// avval ruxsat so'raydi).
+    private fun getSimSubscriptions(): List<Map<String, Any?>> {
+        val list = mutableListOf<Map<String, Any?>>()
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            return list
+        }
+        val subscriptionManager = getSystemService(SubscriptionManager::class.java)
+        val subscriptions = subscriptionManager?.activeSubscriptionInfoList ?: return list
+        for (info in subscriptions) {
+            list.add(
+                mapOf(
+                    "subscriptionId" to info.subscriptionId,
+                    "slotIndex" to info.simSlotIndex,
+                    "displayName" to (info.displayName?.toString() ?: "SIM ${info.simSlotIndex + 1}"),
+                    "carrierName" to (info.carrierName?.toString() ?: ""),
+                )
+            )
+        }
+        return list
+    }
+
+    private fun sendSms(phone: String, message: String, subscriptionId: Int?) {
+        val smsManager: SmsManager =
+            if (subscriptionId != null && subscriptionId >= 0) {
+                SmsManager.getSmsManagerForSubscriptionId(subscriptionId)
+            } else {
+                SmsManager.getDefault()
+            }
         if (message.length > 160) {
             val parts = smsManager.divideMessage(message)
             smsManager.sendMultipartTextMessage(phone, null, parts, null, null)

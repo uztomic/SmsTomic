@@ -36,6 +36,8 @@ class SendSmsBloc extends Bloc<SendSmsEvent, SendSmsState> {
     on<SendSmsStarted>(_onStarted);
     on<_CustomersUpdated>((e, emit) => emit(state.copyWith(customers: e.customers)));
     on<_TemplatesUpdated>((e, emit) => emit(state.copyWith(templates: e.templates)));
+    on<_SimsLoaded>(_onSimsLoaded);
+    on<SimSelected>((e, emit) => emit(state.copyWith(selectedSubscriptionId: e.subscriptionId)));
     on<ToggleCustomerSelection>(_onToggleCustomer);
     on<SelectAllCustomers>(_onSelectAll);
     on<DeselectAllCustomers>(_onDeselectAll);
@@ -54,6 +56,14 @@ class SendSmsBloc extends Bloc<SendSmsEvent, SendSmsState> {
     _templatesSub = _templateRepository
         .watchTemplates()
         .listen((templates) => add(_TemplatesUpdated(templates)));
+    _smsService.getAvailableSims().then((sims) => add(_SimsLoaded(sims)));
+  }
+
+  void _onSimsLoaded(_SimsLoaded event, Emitter<SendSmsState> emit) {
+    emit(state.copyWith(
+      availableSims: event.sims,
+      selectedSubscriptionId: event.sims.isNotEmpty ? event.sims.first.subscriptionId : null,
+    ));
   }
 
   void _onToggleCustomer(ToggleCustomerSelection event, Emitter<SendSmsState> emit) {
@@ -111,7 +121,10 @@ class SendSmsBloc extends Bloc<SendSmsEvent, SendSmsState> {
 
     final results = <SmsSendResult>[];
     var i = 0;
-    await for (final result in _smsService.sendBulk(phoneAndMessage: jobs)) {
+    await for (final result in _smsService.sendBulk(
+      phoneAndMessage: jobs,
+      subscriptionId: state.selectedSubscriptionId,
+    )) {
       final customer = selected[i];
       results.add(result);
       await _logRepository.addLog(SmsLog(

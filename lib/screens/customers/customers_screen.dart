@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/customer/customer_cubit.dart';
 import '../../core/theme.dart';
+import '../../models/app_user.dart';
 import '../../models/customer.dart';
 import 'csv_import.dart';
 import 'customer_form_sheet.dart';
@@ -43,6 +45,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
           if (state.loading) {
             return const Center(child: CircularProgressIndicator());
           }
+          final authState = context.watch<AuthBloc>().state;
+          final canExport =
+              authState is AuthAuthenticated && authState.user.can(Permission.exportCustomers);
           final filtered = _query.isEmpty
               ? state.customers
               : state.customers
@@ -92,11 +97,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
                       icon: const Icon(Icons.upload_file_rounded),
                       tooltip: 'Excel/CSV import',
                     ),
-                    IconButton(
-                      onPressed: () => exportCustomersToExcel(context, state.customers),
-                      icon: const Icon(Icons.download_rounded),
-                      tooltip: 'Excel/CSV eksport',
-                    ),
+                    if (canExport)
+                      IconButton(
+                        onPressed: () => exportCustomersToExcel(context, state.customers),
+                        icon: const Icon(Icons.download_rounded),
+                        tooltip: 'Excel/CSV eksport',
+                      ),
                   ],
                 ),
               ),

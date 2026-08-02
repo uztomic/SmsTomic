@@ -29,6 +29,24 @@ class _TemplatesUpdated extends SendSmsEvent {
   List<Object?> get props => [templates];
 }
 
+class _SimsLoaded extends SendSmsEvent {
+  final List<SimInfo> sims;
+
+  const _SimsLoaded(this.sims);
+
+  @override
+  List<Object?> get props => [sims];
+}
+
+class SimSelected extends SendSmsEvent {
+  final int subscriptionId;
+
+  const SimSelected(this.subscriptionId);
+
+  @override
+  List<Object?> get props => [subscriptionId];
+}
+
 class ToggleCustomerSelection extends SendSmsEvent {
   final String customerId;
 

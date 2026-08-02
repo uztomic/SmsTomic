@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       child: BlocProvider(
         create: (context) => AuthBloc(context.read<AuthRepository>())..add(const AppStarted()),
         child: MaterialApp(
-          title: 'Gul do\'koni SMS',
+          title: 'Roses Kokand',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
